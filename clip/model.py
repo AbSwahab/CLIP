@@ -363,12 +363,15 @@ class CLIP(nn.Module):
         image_features = image_features / image_features.norm(dim=1, keepdim=True)
         text_features = text_features / text_features.norm(dim=1, keepdim=True)
 
-        # cosine similarity as logits
+        # Assuming both image_features and text_features have been normalized if necessary
+        diff = image_features.unsqueeze(1) - text_features.unsqueeze(0)
+        euclidean_distance = diff.pow(2).sum(2)
+        
+        # Convert distances to a similarity measure; for example, using negative exponent
         logit_scale = self.logit_scale.exp()
-        logits_per_image = logit_scale * image_features @ text_features.t()
+        logits_per_image = -logit_scale * euclidean_distance
         logits_per_text = logits_per_image.t()
-
-        # shape = [global_batch_size, global_batch_size]
+    
         return logits_per_image, logits_per_text
 
 
